@@ -9,11 +9,12 @@
         @click="generateBathWisdom"
       />
       <div
-        v-if="bathQuote"
+        v-for="bubble in bubbles"
+        :key="bubble.id"
         class="bubble"
-        :style="{ top: bubblePos.top + 'px', left: bubblePos.left + 'px' }"
+        :style="{ top: bubble.top + 'px', left: bubble.left + 'px' }"
       >
-        {{ bathQuote }}
+        {{ bubble.text }}
       </div>
     </div>
 
@@ -25,10 +26,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
-const bathQuote = ref('')
-const bubblePos = ref({ top: -40, left: 120 }) // стартова позиція
+const bubbles = ref([])
 
 const bathWisdoms = [
   'Submerge your expectations, not just your body.',
@@ -42,22 +42,31 @@ const bathWisdoms = [
   'Cancel your evening. Soak in instead.',
   'No one can email you in the tub. Legally.',
 ]
+function spawnBubble() {
+  const isMini = Math.random() < 0.3 // 30% шанс на emoji-only
 
-function generateBathWisdom() {
-  const index = Math.floor(Math.random() * bathWisdoms.length)
-  bathQuote.value = bathWisdoms[index]
+  const text = isMini ? '🫧' : bathWisdoms[Math.floor(Math.random() * bathWisdoms.length)]
 
-  // Рандомізуємо позицію в межах розумного
-  const top = Math.floor(Math.random() * 100) - 50 // між -50 і 50
-  const left = Math.floor(Math.random() * 140) + 60 // між 60 і 200
+  const id = Date.now() + Math.random()
+  const top = Math.random() * 100 - 40
+  const left = Math.random() * 200 + 50
 
-  bubblePos.value = { top, left }
+  bubbles.value.push({ id, text, top, left })
+
+  setTimeout(() => {
+    bubbles.value = bubbles.value.filter((b) => b.id !== id)
+  }, 9000)
 }
+
+onMounted(() => {
+  setInterval(spawnBubble, 5000) // every 5s
+})
 </script>
 
 <style scoped>
 .home-title {
   font-size: 3.5rem;
+  margin-bottom: 0;
 }
 .home-subtitle {
   font-size: 1.25rem;
@@ -71,8 +80,8 @@ function generateBathWisdom() {
 }
 .home {
   text-align: center;
-  color: #121888;
-  background: #f2dcde;
+  color: #045e66;
+  background: #ffd4bb;
   padding: 2rem;
   ul {
     margin-top: 1rem;
@@ -86,31 +95,79 @@ function generateBathWisdom() {
 .cat-bubble-wrapper {
   position: relative;
   display: inline-block;
-  text-align: center;
+  margin-top: 2rem;
 }
 
 .cat-clickable {
   max-width: 300px;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-.cat-clickable:hover {
-  transform: scale(1.03);
+  display: block;
+  margin: auto;
 }
 
 .bubble {
-  z-index: 1;
   position: absolute;
-  top: -2rem;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #fdf6f0;
-  padding: 1rem;
-  border-radius: 1.5rem;
-  border: 2px solid #ccc;
-  max-width: 280px;
+  width: 120px;
+  height: 120px;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   font-style: italic;
-  font-size: 0.9rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-size: 0.75rem;
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+  animation: floatUp 9s ease forwards;
+  opacity: 0;
+  padding: 0.5rem;
+}
+
+@keyframes floatUp {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(0px);
+  }
+  15% {
+    opacity: 1;
+    transform: scale(0.4) translateY(-20px);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(0.6) translateY(-35px);
+  }
+  50% {
+    transform: scale(1) translateY(-50px);
+  }
+  70% {
+    transform: scale(1.1) translateY(-70px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.25) translateY(-90px);
+  }
+}
+
+.bubble:only-child {
+  animation: fadePopBig 9s ease forwards;
+}
+
+@keyframes fadePopBig {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  20% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  80% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
 }
 </style>
